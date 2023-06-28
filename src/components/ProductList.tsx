@@ -1,35 +1,32 @@
-import { useQuery, useMutation, gql } from '@apollo/client';
-import { GET_PRODUCTS } from '../graphql/queries';
-import { ADD_ITEM_TO_ORDER } from '../graphql/mutations';
-import { useOrderContext } from '../context/OrderContext';
+import { Variant } from "../types/graphqlTypes";
+import { useQuery, useMutation } from "@apollo/client";
+import { GET_PRODUCTS } from "../graphql/queries";
+import { ADD_ITEM_TO_ORDER } from "../graphql/mutations";
+import { useOrderContext } from "../context/OrderContext";
+import { Swiper, SwiperSlide } from "swiper/react/swiper-react";
+import { Navigation, Scrollbar } from "swiper";
+import ProductCard from "./ProductCard";
+import styled from "styled-components";
 import {
   Product,
   GetProductsData,
   AddItemToOrderData,
-} from '../types/graphqlTypes';
+} from "../types/graphqlTypes";
 
-import ProductCard from '../ui/ProductCard';
-import styled from 'styled-components';
+
+import "swiper/swiper.min.css";
+import "swiper/modules/pagination/pagination.min.css";
+import "swiper/modules/navigation/navigation.min.css";
+import "swiper/modules/scrollbar/scrollbar.min.css";
 
 const CardList = styled.ul`
-display: flex;
-    list-style: none;
-    justify-content: center;
-    flex-wrap: wrap;
-    gap: 25px;
-    list-style: none;
-    position:relative;
-`;
-
-
-const REMOVE_ORDER_LINE = gql`
-mutation RemoveOrderLine {
-  removeAllOrderLines {
-    ... on Order {
-      id
-    }
-  }
-}
+  display: flex;
+  list-style: none;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 50px;
+  list-style: none;
+  position: relative;
 `;
 
 export function ProductList() {
@@ -40,8 +37,6 @@ export function ProductList() {
   } = useQuery<GetProductsData>(GET_PRODUCTS);
   const [addItemToOrder] = useMutation<AddItemToOrderData>(ADD_ITEM_TO_ORDER);
   const { setOrderSubtotal } = useOrderContext();
-
-  const [removeOrderLine] = useMutation(REMOVE_ORDER_LINE);
 
   const handleAddItemToOrder = async (
     productVariantId: string,
@@ -58,31 +53,15 @@ export function ProductList() {
       const newItem = data?.addItemToOrder;
       let itemPrice: number | undefined;
 
-      if (newItem && 'lines' in newItem) {
+      if (newItem && "lines" in newItem) {
         itemPrice =
           newItem.lines[newItem.lines.length - 1].productVariant.price;
       } else {
         itemPrice = undefined;
       }
-      console.log(data);
-      console.log(itemPrice);
       setOrderSubtotal((prevSubtotal) => prevSubtotal + (itemPrice || 0));
     } catch (error) {
       console.error(error);
-    }
-  };
-
-  const handleRemoveOrderLine = async (orderLineId:any) => {
-    try {
-      const { data } = await removeOrderLine({
-        variables: {
-          orderLineId: '201',
-        },
-      });
-      console.log('Order line removed:', data.removeOrderLine);
-      setOrderSubtotal(0);
-    } catch (error) {
-      console.error('Error removing order line:', error);
     }
   };
 
@@ -91,16 +70,34 @@ export function ProductList() {
 
   return (
     <>
-      <div>
-        <button onClick={handleRemoveOrderLine}>Remove all items</button>
-        <CardList style={{ listStyle: 'none' }}>
+        <CardList>
           {queryData?.products.items.map((product: Product) => {
             return (
-              <ProductCard key={product.id} product={product} action={handleAddItemToOrder}/>
+              <Swiper
+                key={product.id}
+                spaceBetween={20}
+                slidesPerView={1}
+                style={{ width: "300px", borderRadius: "6px" }}
+                navigation={product.variants.length > 1 ? true : false}
+                scrollbar={{
+                  hide: true,
+                }}
+                modules={[Scrollbar, Navigation]}
+              >
+                {product.variants.map((variant: Variant) => (
+                  <SwiperSlide key={variant.id}>
+                    <ProductCard
+                      variant={variant}
+                      key={product.id}
+                      product={product}
+                      action={handleAddItemToOrder}
+                    />
+                  </SwiperSlide>
+                ))}
+              </Swiper>
             );
           })}
         </CardList>
-      </div>
     </>
   );
 }

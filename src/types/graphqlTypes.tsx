@@ -17,6 +17,14 @@ export interface Product {
   }[];
 }
 
+export interface Variant {
+  id: string;
+  name: string;
+  price: number;
+  stockLevel: string;
+}
+
+
 export interface GetProductsData {
   products: {
     items: Product[];
@@ -39,5 +47,5 @@ export interface AddItemToOrderData {
   } | {
     errorCode: string;
     message: string;
-  } | undefined; // Added undefined type to handle potential undefined response
+  } | undefined; 
 }

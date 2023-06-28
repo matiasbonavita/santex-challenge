@@ -23,3 +23,13 @@ export const ADD_ITEM_TO_ORDER: DocumentNode = gql`
     }
   }
 `;
+
+export const REMOVE_ORDER_LINE = gql`
+mutation RemoveOrderLine {
+  removeAllOrderLines {
+    ... on Order {
+      id
+    }
+  }
+}
+`;
